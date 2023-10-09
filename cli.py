@@ -2,7 +2,7 @@ import json
 import inquirer
 from tqdm import tqdm
 import time
-from actions import Action
+from actions2 import Action
 from proxy_client import APIClient
 from loader import SubscriberSingleton
 import re
@@ -61,7 +61,9 @@ class CLI:
             self.loader.add(1, "GET Request", lambda: self.__assign(response, grpc_client.get_file(filename)))
         )
 
-        print(response.content)
+        if response.content["status"] != 500:
+            with open(response.content["data"].name, 'wb') as file:
+                file.write(response.content["data"].data)
 
     def __assign(self, wrapper, content):
         wrapper.content = content
@@ -91,7 +93,7 @@ class CLI:
 
         with open(filename, "rb") as file:
             await asyncio.gather(
-                self.loader.add(1, "GET Request", lambda: self.__assign(response, self.client.put("PUT", file)))
+                self.loader.add(1, "GET Request", lambda: self.__assign(response, grpc_client.put_file(filename, file.read())))
             )
 
         print(response.content)
@@ -100,7 +102,7 @@ class CLI:
         response = Wrapper()
 
         await asyncio.gather(
-            self.loader.add(3, "GET Request", lambda: self.__assign(response, grpc_client.list_files()))
+            self.loader.add(3, "GET Request", lambda: self.__assign(response, self.client.get()))
         )
 
         print(response.content)

@@ -23,7 +23,16 @@ class FileClient:
 
     def get_file(self, name):
         request = FileServicesStub.FileRequest(name=name)
-        response = self.stub.GetFile(request)
+        try:
+            response = { 
+                "data": self.stub.GetFile(request),
+                "status": 200
+            }
+        except:
+            response = {
+                "status": 500
+            }
+
         return response
 
     def put_file(self, name, data):
