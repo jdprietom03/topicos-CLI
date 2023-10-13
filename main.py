@@ -1,4 +1,6 @@
 from cli import CLI
+from dotenv import load_dotenv
+load_dotenv()
 
 def main():
     CLI().run()

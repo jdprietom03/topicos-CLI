@@ -11,20 +11,19 @@ class APIClient:
     def get(self, endpoint, data = None):
         url = f"{self.base_url}/{endpoint}"
         response = requests.get(url, data = json.dumps(data), headers=self.headers)
-        return response
+        return eval(response.content.decode())
 
     def put(self, endpoint, data):
-        self.headers["Content-Type"] = "multipart/form-data"
         url = f"{self.base_url}/{endpoint}"
-        response = requests.put(url, data=data, headers=self.headers)
-        return response
+        response = requests.put(url, data=json.dumps(data), headers=self.headers)
+        return response.content.decode()
 
-    def list(self, endpoint):
+    def list(self, endpoint, data = None):
         url = f"{self.base_url}/{endpoint}"
-        response = requests.get(url)
-        return response
+        response = requests.get(url, data = json.dumps(data), headers=self.headers)
+        return eval(response.content.decode())
 
-    def search(self, endpoint, query_params):
+    def search(self, endpoint, data = None):
         url = f"{self.base_url}/{endpoint}"
-        response = requests.get(url, params=query_params)
-        return response
+        response = requests.get(url, data = json.dumps(data), headers=self.headers)
+        return eval(response.content.decode())

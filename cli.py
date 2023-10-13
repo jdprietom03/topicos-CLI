@@ -2,13 +2,17 @@ import json
 import inquirer
 from tqdm import tqdm
 import time
-from actions2 import Action
+from actions import Action
 from proxy_client import APIClient
 from loader import SubscriberSingleton
 import re
 import asyncio
 from questions import *
-from grpc_client import grpc_client
+from grpc_client import FileClient
+import os
+from tabulate import tabulate
+
+
 
 class Wrapper:
     def __init__(self):
@@ -19,7 +23,11 @@ class Wrapper:
 
 class CLI:
     def __init__(self, **kwargs):
-        self.client = APIClient("http://3.94.130.231:80")
+        NAME_NODE_HOST = os.getenv('NAME_NODE_HOST')
+        NAME_NODE_PORT = os.getenv('NAME_NODE_PORT')
+
+        self.client = APIClient(f"{NAME_NODE_HOST}:{NAME_NODE_PORT}")
+        
         self.loader = SubscriberSingleton
 
     def value_of(self, action):
@@ -56,6 +64,13 @@ class CLI:
             filename = answers["file"]
             do_request = answers["do_request"]
 
+        await asyncio.gather(
+            self.loader.add(1, "GET Request", lambda: self.__assign(response, self.client.get("get", {
+                "payload": filename
+            })))
+        )
+        
+        grpc_client = FileClient.set_host(response.content[0][0])
 
         await asyncio.gather(
             self.loader.add(1, "GET Request", lambda: self.__assign(response, grpc_client.get_file(filename)))
@@ -90,6 +105,13 @@ class CLI:
             filename = answers["file"]
             do_request = answers["do_request"]
 
+        await asyncio.gather(
+            self.loader.add(1, "PUT Request", lambda: self.__assign(response, self.client.put("put", {
+                "payload": filename
+            })))
+        )
+
+        grpc_client = FileClient.set_host(response.content)
 
         with open(filename, "rb") as file:
             await asyncio.gather(
@@ -102,10 +124,14 @@ class CLI:
         response = Wrapper()
 
         await asyncio.gather(
-            self.loader.add(3, "GET Request", lambda: self.__assign(response, self.client.get()))
+            self.loader.add(3, "Listing files", lambda: self.__assign(response, self.client.list("list", data={"payload": "."})))
         )
 
-        print(response.content)
+        headers = ['DataNode', 'Ruta']
+
+        table = tabulate(response.content, headers, tablefmt="pretty")
+
+        print(table)
 
     async def SEARCH(self):
         response = Wrapper()
@@ -131,12 +157,16 @@ class CLI:
 
 
         await asyncio.gather(
-            self.loader.add(3, "GET Request", lambda: self.__assign(response, self.client.get("SEARCH", {
+            self.loader.add(3, "GET Request", lambda: self.__assign(response, self.client.search("search", data = {
                 "payload":  search
             })))
         )
 
-        print(response.content)
+        headers = ['DataNode', 'Ruta']
+
+        table = tabulate(response.content, headers, tablefmt="pretty")
+
+        print(table)
 
     def run(self):
         print("CLI: DFS System")

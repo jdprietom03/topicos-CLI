@@ -4,8 +4,6 @@ from google.protobuf.empty_pb2 import Empty
 import FileServices_pb2 as FileServicesStub
 import FileServices_pb2_grpc as FileServices_pb2_grpc
 
-SERVER_ADDRESS = '54.198.28.222:50051'
-
 class FileClient:
     def __init__(self, address):
         self.channel = grpc.insecure_channel(address)
@@ -39,6 +37,6 @@ class FileClient:
         request = FileServicesStub.FileContent(name=name, data=bytes(data))
         response = self.stub.PutFile(request)
         return response
-
-
-grpc_client = FileClient(SERVER_ADDRESS)
+    
+    def set_host(host):
+        return FileClient(f"{host}:50051")
